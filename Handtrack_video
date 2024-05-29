@@ -1,0 +1,79 @@
+import os
+import cv2
+import mediapipe as mp
+
+mp_hands = mp.solutions.hands
+mp_drawing = mp.solutions.drawing_utils
+
+input_video_path = r"C:\Users\17891\OneDrive\Documents\sign2sign\input_video.mp4"
+output_video_path = r"C:\Users\17891\OneDrive\Documents\sign2sign\output_video_with_hands.mp4"
+
+# Check if the input video file exists
+if not os.path.isfile(input_video_path):
+    print(f"Error: The video file '{input_video_path}' does not exist.")
+    exit()
+
+# Open the input video file
+cap = cv2.VideoCapture(input_video_path)
+
+# Check if the video was opened successfully
+if not cap.isOpened():
+    print("Error: Could not open video.")
+    exit()
+
+# Define the codec and create VideoWriter object
+fourcc = cv2.VideoWriter_fourcc(*'mp4v')
+out = cv2.VideoWriter(output_video_path, fourcc, 20.0, (int(cap.get(3)), int(cap.get(4))))
+
+# Initialize the MediaPipe Hands model
+with mp_hands.Hands(min_detection_confidence=0.3, min_tracking_confidence=0.3) as hands:
+    frame_count = 0
+    while cap.isOpened():
+        ret, frame = cap.read()
+        if not ret:
+            print("Failed to read frame")
+            break
+
+        frame_count += 1
+        print(f"Processing frame {frame_count}")
+
+        # Convert the frame to RGB
+        frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+        results = hands.process(frame_rgb)
+
+        # Debug: Print results
+        print(results.multi_hand_landmarks)
+
+        # Check if hands are detected and print landmarks for debugging
+        if results.multi_hand_landmarks:
+            print("Hand detected!")
+            for hand_landmarks in results.multi_hand_landmarks:
+                mp_drawing.draw_landmarks(frame, hand_landmarks, mp_hands.HAND_CONNECTIONS)
+
+                # Calculate bounding box coordinates
+                h, w, _ = frame.shape
+                x_min = min([landmark.x for landmark in hand_landmarks.landmark]) * w
+                y_min = min([landmark.y for landmark in hand_landmarks.landmark]) * h
+                x_max = max([landmark.x for landmark in hand_landmarks.landmark]) * w
+                y_max = max([landmark.y for landmark in hand_landmarks.landmark]) * h
+
+                # Draw bounding box
+                cv2.rectangle(frame, (int(x_min), int(y_min)), (int(x_max), int(y_max)), (0, 255, 0), 4)
+        else:
+            print("No hands detected")
+
+        # Write the processed frame to the output video
+        out.write(frame)
+
+        # Display the frame
+        display = cv2.resize(frame, (780, 540), interpolation=cv2.INTER_LINEAR)
+        cv2.imshow('Hand Tracking', display)
+
+        # Break the loop on 'q' key press
+        if cv2.waitKey(1) & 0xFF == ord('q'):
+            break
+
+# Release video capture and writer objects and close display windows
+cap.release()
+out.release()
+cv2.destroyAllWindows()
