@@ -49,16 +49,6 @@ with mp_hands.Hands(min_detection_confidence=0.3, min_tracking_confidence=0.3) a
             print("Hand detected!")
             for hand_landmarks in results.multi_hand_landmarks:
                 mp_drawing.draw_landmarks(frame, hand_landmarks, mp_hands.HAND_CONNECTIONS)
-
-                # Calculate bounding box coordinates
-                h, w, _ = frame.shape
-                x_min = min([landmark.x for landmark in hand_landmarks.landmark]) * w
-                y_min = min([landmark.y for landmark in hand_landmarks.landmark]) * h
-                x_max = max([landmark.x for landmark in hand_landmarks.landmark]) * w
-                y_max = max([landmark.y for landmark in hand_landmarks.landmark]) * h
-
-                # Draw bounding box
-                cv2.rectangle(frame, (int(x_min), int(y_min)), (int(x_max), int(y_max)), (0, 255, 0), 4)
         else:
             print("No hands detected")
 
@@ -77,3 +67,4 @@ with mp_hands.Hands(min_detection_confidence=0.3, min_tracking_confidence=0.3) a
 cap.release()
 out.release()
 cv2.destroyAllWindows()
+
