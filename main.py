@@ -1,6 +1,12 @@
 import argparse
 from scripts import preprocess_videos, train_model, translate_video
 
+"""
+For Preprocess Videos: python main.py --preprocess
+For Train Models: python main.py --train
+For Translate videos: python main.py --translate --input_video path/to/input_video.mp4 --output_video path/to/output_video.mp4 --direction asl_to_csl
+"""
+
 def main():
     parser = argparse.ArgumentParser(description='Sign Language Translator')
     parser.add_argument('--preprocess', action='store_true', help='Preprocess videos')
