@@ -1,24 +1,23 @@
-import torch
-import torch.optim as optim
-from torch.utils.data import DataLoader
-from utils.dataset import SignLanguageDataset
-from utils.model import SignLanguageModel
+import numpy as np
+from sklearn.model_selection import train_test_split
+from sklearn.ensemble import RandomForestClassifier
+import joblib
+import os
 
-def train():
-    dataset = SignLanguageDataset('data/processed')
-    dataloader = DataLoader(dataset, batch_size=32, shuffle=True)
-    
-    model = SignLanguageModel()
-    criterion = torch.nn.CrossEntropyLoss()
-    optimizer = optim.Adam(model.parameters(), lr=0.001)
+def train_model(X, y, lang):
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+    model = RandomForestClassifier()
+    model.fit(X_train, y_train)
+    accuracy = model.score(X_test, y_test)
+    print(f"{lang.upper()} Model Accuracy: {accuracy}")
+    model_dir = f'../models/{lang}'
+    if not os.path.exists(model_dir):
+        os.makedirs(model_dir)
+    joblib.dump(model, f'{model_dir}/sign_language_model.pkl')
 
-    for epoch in range(10):
-        for inputs, labels in dataloader:
-            optimizer.zero_grad()
-            outputs = model(inputs)
-            loss = criterion(outputs, labels)
-            loss.backward()
-            optimizer.step()
-        print(f"Epoch {epoch+1}, Loss: {loss.item()}")
-    
-    torch.save(model.state_dict(), 'models/sign_language_model.pth')
+if __name__ == "__main__":
+    for lang in ['asl', 'csl']:
+        X = np.load(f'../data/X_{lang}.npy')
+        y = np.load(f'../data/y_{lang}.npy')
+        train_model(X, y, lang)
+
