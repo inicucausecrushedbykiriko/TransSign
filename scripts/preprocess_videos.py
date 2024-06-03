@@ -1,7 +1,8 @@
 import os
 import cv2
+from scripts.extract_features import extract_features, save_features_to_csv
 
-def preprocess_videos(data_dir, processed_dir):
+def preprocess_videos(data_dir, processed_dir, output_csv):
     if not os.path.exists(processed_dir):
         os.makedirs(processed_dir)
         print(f"Created processed directory: {processed_dir}")
@@ -24,9 +25,9 @@ def preprocess_videos(data_dir, processed_dir):
                     if video_file.endswith('.mp4'):
                         video_path = os.path.join(label_dir, video_file)
                         print(f"Processing video: {video_path}")
-                        process_video(video_path, processed_label_dir)
+                        process_video(video_path, processed_label_dir, output_csv)
 
-def process_video(video_path, output_dir):
+def process_video(video_path, output_dir, output_csv):
     print(f"Processing video file: {video_path}")
     cap = cv2.VideoCapture(video_path)
     if not cap.isOpened():
@@ -40,6 +41,13 @@ def process_video(video_path, output_dir):
         frame_file = os.path.join(output_dir, f"frame_{frame_count}.jpg")
         cv2.imwrite(frame_file, frame)
         print(f"Saved frame: {frame_file}")
+        
+        # Extract features and save to CSV
+        features = extract_features(frame_file)
+        if features:
+            print(f"Extracted features from frame: {frame_file}")
+            save_features_to_csv(features, output_csv)
+        
         frame_count += 1
     cap.release()
     print(f"Processed {frame_count} frames from {video_path}")
@@ -47,4 +55,6 @@ def process_video(video_path, output_dir):
 if __name__ == "__main__":
     data_dir = './data/sign_videos'
     processed_dir = './data/processed_frames'
-    preprocess_videos(data_dir, processed_dir)
+    output_csv = './data/features.csv'
+    preprocess_videos(data_dir, processed_dir, output_csv)
+

@@ -1,4 +1,5 @@
 import argparse
+import numpy as np
 from scripts.preprocess_videos import preprocess_videos
 from scripts.prepare_dataset import prepare_dataset
 from scripts.train_model import train_model
@@ -14,7 +15,9 @@ def main():
     if args.preprocess:
         data_dir = './data/sign_videos'
         processed_dir = './data/processed_frames'
-        preprocess_videos(data_dir, processed_dir)
+        output_csv = './data/features.csv'
+        print(f"Preprocessing videos from {data_dir} to {processed_dir}")
+        preprocess_videos(data_dir, processed_dir, output_csv)
     elif args.prepare:
         processed_dir = './data/processed_frames'
         for lang in ['asl', 'csl']:
