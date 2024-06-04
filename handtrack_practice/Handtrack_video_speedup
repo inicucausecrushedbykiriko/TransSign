@@ -23,8 +23,10 @@ mp_hands = mp.solutions.hands
 mp_drawing = mp.solutions.drawing_utils
 mp_drawing_styles = mp.solutions.drawing_styles
 
-input_video_path = r"C:\Users\17891\OneDrive\Documents\sign2sign\input_video.mp4"
-output_video_path = r"C:\Users\17891\OneDrive\Documents\sign2sign\output_video_with_hands.mp4"
+script_dir = os.path.dirname(os.path.abspath(__file__))
+
+input_video_path = os.path.join(script_dir, 'input_video.mp4')
+output_video_path = os.path.join(script_dir, 'output_video_with_hands.mp4')
 
 # Check if the input video file exists
 if not os.path.isfile(input_video_path):
