@@ -7,7 +7,7 @@ def create_if_not_exsit(target_dir, msg):
         os.makedirs(target_dir)
         print(f"{msg}: {target_dir}")
 
-def preprocess_a_video(data_dir, processed_dir, lang, output_csv):
+def preprocess_a_video(data_dir, processed_dir, features_dir, lang, output_csv):
     lang_dir = os.path.join(data_dir, lang)
     processed_lang_dir = os.path.join(processed_dir, lang)
     create_if_not_exsit(processed_lang_dir, "Created processed language directory")
@@ -19,10 +19,12 @@ def preprocess_a_video(data_dir, processed_dir, lang, output_csv):
             print(f"Processing video: {video_path}")
             process_video(video_path, processed_label_dir, output_csv)
 
-def preprocess_videos(data_dir, processed_dir, output_csv):
+def preprocess_videos(data_dir, processed_dir, features_dir):
     create_if_not_exsit(processed_dir, "Created processed directory")
+    create_if_not_exsit(features_dir, "Created features directory")
     for lang in ['asl', 'csl']:
-        preprocess_a_video(data_dir, processed_dir, lang, output_csv)
+        output_csv = os.path.join(features_dir, f'{lang}_features.csv')
+        preprocess_a_video(data_dir, processed_dir, features_dir, lang, output_csv)
 
 def process_video(video_path, output_dir, output_csv):
     print(f"Processing video file: {video_path}")
@@ -51,7 +53,6 @@ def process_video(video_path, output_dir, output_csv):
 
 if __name__ == "__main__":
     data_dir = './data/sign_videos'
-    processed_dir = './data/processed_frames'
-    output_csv = './data/features.csv'
-    preprocess_videos(data_dir, processed_dir, output_csv)
-
+    processed_dir = './data/sign_images'
+    features_dir = './data/features'
+    preprocess_videos(data_dir, processed_dir, features_dir)

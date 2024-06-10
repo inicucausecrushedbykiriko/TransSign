@@ -14,14 +14,14 @@ def main():
 
     if args.preprocess:
         data_dir = './data/sign_videos'
-        processed_dir = './data/processed_frames'
-        output_csv = './data/features.csv'
+        processed_dir = './data/sign_images'
+        features_dir = './data/features'
         print(f"Preprocessing videos from {data_dir} to {processed_dir}")
-        preprocess_videos(data_dir, processed_dir, output_csv)
+        preprocess_videos(data_dir, processed_dir, features_dir)
     elif args.prepare:
-        processed_dir = './data/processed_frames'
+        features_dir = './data/features'
         for lang in ['asl', 'csl']:
-            X, y = prepare_dataset(f'{processed_dir}/{lang}')
+            X, y = prepare_dataset(features_dir, lang)
             np.save(f'./data/X_{lang}.npy', X)
             np.save(f'./data/y_{lang}.npy', y)
     elif args.train:
