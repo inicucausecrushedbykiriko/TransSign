@@ -78,7 +78,7 @@ print(f"Overall Accuracy: {accuracy * 100:.2f}%")
 
 # Print some sample predictions for verification
 print("\nSample Predictions:")
-for i in range(10):
+for i in range(100):
     true_label = y_test[i].item()
     predicted_label = all_predictions[i]
     probabilities = all_probabilities[i]

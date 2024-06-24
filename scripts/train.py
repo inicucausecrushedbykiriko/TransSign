@@ -50,20 +50,20 @@ class SignModel(nn.Module):
 model = SignModel()
 
 # Define loss and optimizer
-criterion = nn.CrossEntropyLoss()
+criterion = nn.CrossEntropyLoss()  # Cross-Entropy Loss
 optimizer = optim.Adam(model.parameters(), lr=0.001)
 
 # Train the model
-epochs = 100
+epochs = 1000
 for epoch in range(epochs):
     model.train()
     running_loss = 0.0
     for inputs, labels in train_loader:
         optimizer.zero_grad()
         outputs = model(inputs)
-        loss = criterion(outputs, labels)
-        loss.backward()
-        optimizer.step()
+        loss = criterion(outputs, labels)  # Calculate the loss
+        loss.backward()  # Compute gradients
+        optimizer.step()  # Update weights
         running_loss += loss.item()
     if epoch % 10 == 0:
         print(f"Epoch {epoch+1}, Loss: {running_loss/len(train_loader)}")
