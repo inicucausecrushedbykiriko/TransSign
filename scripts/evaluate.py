@@ -74,7 +74,6 @@ with torch.no_grad():
                 digit_correct[label.item()] += 1
 
 accuracy = correct / total
-print(f"Overall Accuracy: {accuracy * 100:.2f}%")
 
 # Print some sample predictions for verification
 print("\nSample Predictions:")
@@ -91,6 +90,8 @@ for i in range(11):
         print(f"Digit {i+1} Accuracy: {digit_accuracy * 100:.2f}%")
     else:
         print(f"Digit {i+1} Accuracy: N/A (no samples)")
+
+print(f"Overall Accuracy: {accuracy * 100:.2f}%")
 
 # # Detailed evaluation for each test sample
 # print("\nDetailed Evaluation:")
