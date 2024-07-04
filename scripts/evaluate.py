@@ -4,7 +4,7 @@ import torch
 import torch.nn as nn
 from torch.utils.data import DataLoader, TensorDataset
 from sklearn.preprocessing import StandardScaler
-from sklearn.metrics import accuracy_score
+import matplotlib.pyplot as plt
 
 class SignModel(nn.Module):
     def __init__(self):
@@ -61,10 +61,33 @@ def evaluate_model(test_loader, model_path, scaler):
     #     true_label = test_loader.dataset[i][1].item()
     #     predicted_label = all_predictions[i]
     #     probabilities = all_probabilities[i]
-    #     print(f"Example {i + 1}: True: {true_label+1}, Predicted: {predicted_label+1}, Probabilities: {probabilities}")
+    #     print(f"Example {i + 1}: True: {true_label + 1}, Predicted: {predicted_label + 1}, Probabilities: {probabilities}")
+
+def plot_training_log(log_path, graph_path):
+    epochs, losses, accuracies = [], [], []
+
+    with open(log_path, 'r') as log_file:
+        log_file.readline()  # Skip header
+        for line in log_file:
+            epoch, loss, accuracy = line.strip().split(',')
+            epochs.append(int(epoch))
+            losses.append(float(loss))
+            accuracies.append(float(accuracy))
+
+    plt.figure()
+    plt.plot(epochs, losses, label='Loss', color='blue')
+    plt.plot(epochs, accuracies, label='Accuracy', color='red')
+    plt.xlabel('Epoch')
+    plt.ylabel('Value')
+    plt.legend()
+    plt.title('Training Loss and Accuracy')
+    plt.savefig(graph_path)
+    plt.close()
 
 if __name__ == "__main__":
     prepared_data_dir = './data/prepared_data'
+    graph_dir = './data/graphs'
+    log_dir = './data/logs'
 
     def load_data(language):
         X_test = np.load(os.path.join(prepared_data_dir, f'X_{language}_test.npy'))
@@ -88,3 +111,7 @@ if __name__ == "__main__":
 
     print("CSL Model Evaluation")
     evaluate_model(test_loader_csl, 'models/csl_model.pth', scaler_csl)
+
+    print("Generating training graphs...")
+    plot_training_log(os.path.join(log_dir, 'asl_training_log.csv'), os.path.join(graph_dir, 'asl_training.png'))
+    plot_training_log(os.path.join(log_dir, 'csl_training_log.csv'), os.path.join(graph_dir, 'csl_training.png'))
