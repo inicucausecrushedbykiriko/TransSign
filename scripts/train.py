@@ -13,7 +13,7 @@ def train_model(train_loader, test_loader, model_path, scaler_path, log_path):
     optimizer = optim.Adam(model.parameters(), lr=0.001)
     scaler = StandardScaler()
 
-    epochs = 100
+    epochs = 1000
     train_losses = []
     test_accuracies = []
 
