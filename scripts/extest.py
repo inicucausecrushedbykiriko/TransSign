@@ -5,17 +5,20 @@ import torch
 import torch.nn as nn
 from sklearn.preprocessing import StandardScaler
 from evaluate import SignModel
+import time
+import mediapipe as mp
+mp_hands = mp.solutions.hands
+hands = mp_hands.Hands(static_image_mode=True, max_num_hands=1, min_detection_confidence=0.5)
 
 def process_image(image_path):
+    global hands
+    global mp_hands
     # Load image
     image = cv2.imread(image_path)
     if image is None:
         raise FileNotFoundError(f"Image {image_path} not found")
 
     # Process image to extract hand landmarks using Mediapipe
-    import mediapipe as mp
-    mp_hands = mp.solutions.hands
-    hands = mp_hands.Hands(static_image_mode=True, max_num_hands=1, min_detection_confidence=0.5)
 
     image_rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
     results = hands.process(image_rgb)
@@ -32,22 +35,39 @@ def process_image(image_path):
     raise ValueError(f"Hand landmarks could not be processed for image {image_path}")
 
 def predict_digit(image_path, model_path, scaler_path):
+    print("Process image time")
+    start = time.time()
     # Process the image to extract features
     features = process_image(image_path).reshape(1, -1)
+    end = time.time()
+    print(end - start)
 
+    print("Load model time")
+    start = time.time()
     # Load the trained model and scaler
     model = SignModel()
     model.load_state_dict(torch.load(model_path))
     model.eval()
+    end = time.time()
+    print(end - start)
 
+    print("Load scaler time")
+    start = time.time()
     scaler = torch.load(scaler_path)
     features = scaler.transform(features)
+    end = time.time()
+    print(end - start)
 
+    print("Predict time")
+    start = time.time()
     features = torch.tensor(features, dtype=torch.float32)
     with torch.no_grad():
         outputs = model(features)
         probabilities = nn.functional.softmax(outputs, dim=1)
         _, predicted = torch.max(probabilities, 1)
+    end = time.time()
+    print(end - start)
+
 
     predicted_digit = predicted.item() + 1
     return predicted_digit, probabilities.numpy()
