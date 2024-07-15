@@ -6,6 +6,7 @@ from sklearn.preprocessing import StandardScaler
 from evaluate import SignModel
 import time
 import mediapipe as mp
+import os
 
 mp_hands = mp.solutions.hands
 hands = mp_hands.Hands(static_image_mode=False, max_num_hands=1, min_detection_confidence=0.5)
@@ -40,16 +41,25 @@ def predict_digit(frame, model, scaler):
     predicted_digit = predicted.item() + 1
     return predicted_digit, probabilities.numpy()
 
-def main():
-    model_path = './models/asl_model.pth'
-    scaler_path = './models/scaler_asl.pth'
+def load_model_and_scaler(language):
+    model_path = f'./models/{language}_model.pth'
+    scaler_path = f'./models/scaler_{language}.pth'
 
-    # Load the trained model and scaler
     model = SignModel()
     model.load_state_dict(torch.load(model_path))
     model.eval()
 
     scaler = torch.load(scaler_path)
+    return model, scaler
+
+def main():
+    input_type = input("Enter the type of input (asl/csl): ").strip().lower()
+
+    if input_type not in ['asl', 'csl']:
+        print("Invalid input type. Please enter 'asl' or 'csl'.")
+        return
+
+    model, scaler = load_model_and_scaler(input_type)
 
     cap = cv2.VideoCapture(0)
     if not cap.isOpened():
@@ -66,6 +76,16 @@ def main():
             digit, probabilities = predict_digit(frame, model, scaler)
             print(f"Predicted Digit: {digit}")
             print(f"Probabilities: {probabilities}")
+
+            if input_type == 'asl':
+                translation_path = f'./data/show/csl/{digit}.png'
+            else:
+                translation_path = f'./data/show/asl/{digit}.png'
+
+            translation_image = cv2.imread(translation_path)
+            if translation_image is not None:
+                translation_image = cv2.resize(translation_image, (200, 200))
+                frame[0:200, 0:200] = translation_image
 
             # Display the frame
             cv2.putText(frame, f"Predicted Digit: {digit}", (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 0, 0), 2, cv2.LINE_AA)
