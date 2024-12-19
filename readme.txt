@@ -10,7 +10,13 @@ The dataset includes keypoint features extracted from videos, annotated with ess
 This dataset is open for public use. Researchers and developers are welcome to use it for training, experimentation, or to further refine the model.
 
 Dataset Overview
-The dataset consists of CSV files generated from processed videos. Each file contains the following:
+The dataset consists of CSV files generated from processed videos. 
+They are saved in data\features\asl_features and data\features\csl_features, each containing data from a video of a sign language digit.
+asl_features contains features from ASL, American Sign Language and csl_features contains data from CSL chinese sign language.
+For example, 1.0.csv means it is digit 1, and the 0 after it is used to distinguish the different files of digit 1 data processed from different videos.
+And there is also a merged dataset version in data file.
+
+Each file contains the following:
 Time Sequence: The frame order within the video.
 Language Identifier:
 1: ASL (American Sign Language)
@@ -28,7 +34,6 @@ Time	Digit	LanguageID	Point_1_X	Point_1_Y	Point_1_Z	...	Point_59_Z
 
 Future Vision
 The ultimate aim is to develop a model inspired by large-scale language models that can:
-
 Successfully classify the digit represented in a sign language video.
 Generalize to unseen data by leveraging large-scale, diverse training datasets.
 Be applied to real-world use cases by analyzing new videos placed in a separate folder to predict the corresponding sign language digit.
@@ -36,6 +41,6 @@ Be applied to real-world use cases by analyzing new videos placed in a separate 
 Contact
 For questions, feedback, or access to the dataset:
 
-Researcher: Titus Weng
-Email: tw013@bucknell.edu
+Researcher: Titus Weng and SingChun
+Email: tw013@bucknell.edu; singchun.lee@bucknell.edu 
 Institution: Bucknell University
