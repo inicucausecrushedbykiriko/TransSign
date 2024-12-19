@@ -128,7 +128,7 @@ if __name__ == "__main__":
 
     # Configuration
     model_save_path = './models/transformer_model.pth'
-    max_frames = 236  # Update max frames
+    max_frames = 236
     num_features = 59 * 3
 
     train_model(features, labels, model_save_path, max_frames, num_features)
