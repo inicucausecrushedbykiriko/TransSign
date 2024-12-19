@@ -5,7 +5,7 @@ import os
 import numpy as np
 from multiprocessing import Pool, cpu_count
 
-# Initialize Mediapipe modules globally (to avoid re-initializing in each process)
+# Initialize Mediapipe modules globally
 mp_hands = mp.solutions.hands.Hands(static_image_mode=True, max_num_hands=2)
 mp_face = mp.solutions.face_mesh.FaceMesh(static_image_mode=True, max_num_faces=1)
 mp_pose = mp.solutions.pose.Pose(static_image_mode=True)
@@ -50,31 +50,32 @@ def extract_keypoints(image_path):
 
     return hand_keypoints + face_keypoints + shoulder_keypoints
 
-def process_video(video_image_folder, output_csv, max_frames, label):
+def process_video(video_image_folder, output_csv, max_frames, digit, language_id):
     """Process all frames in a single video folder."""
     frame_data = []
     frame_files = sorted(os.listdir(video_image_folder))
 
-    for frame_file in frame_files:
+    for idx, frame_file in enumerate(frame_files):
         frame_path = os.path.join(video_image_folder, frame_file)
         if os.path.isfile(frame_path):
             keypoints = extract_keypoints(frame_path)
             if keypoints:
-                frame_data.append([frame_file] + [val for kp in keypoints for val in kp])
+                # Use frame sequence index (starting from 0)
+                frame_data.append(
+                    [idx, digit, language_id] + [val for kp in keypoints for val in kp]
+                )
 
     # Handle padding
-    num_features = len(frame_data[0]) - 1 if frame_data else 59 * 3  # Exclude 'Frame' column
+    num_features = len(frame_data[0]) - 3 if frame_data else 59 * 3  # Exclude 'Time', 'Digit', and 'LanguageID'
     while len(frame_data) < max_frames:
-        frame_data.append(["PAD"] + [0] * num_features)  # Add padding frames
-
-    # Add label to each frame
-    for row in frame_data:
-        row.append(label)
+        frame_data.append([len(frame_data), digit, language_id] + [0] * num_features)  # Add padding frames
 
     # Save to CSV
     with open(output_csv, mode='w', newline='') as file:
         writer = csv.writer(file)
-        writer.writerow(['Frame'] + [f'Point_{i}_{axis}' for i in range(1, 60) for axis in ['X', 'Y', 'Z']] + ['Label'])
+        writer.writerow(
+            ['Time', 'Digit', 'LanguageID'] + [f'Point_{i}_{axis}' for i in range(1, 60) for axis in ['X', 'Y', 'Z']]
+        )
         writer.writerows(frame_data)
     print(f"Processed {video_image_folder} and saved features to {output_csv}")
 
@@ -103,7 +104,7 @@ def process_all_images_parallel(image_dir, output_features_dir):
     print(f"Maximum frames determined: {max_frames}")
 
     tasks = []
-    for lang in ['asl', 'csl']:
+    for lang, language_id in zip(['asl', 'csl'], [1, 2]):
         lang_folder = os.path.join(image_dir, lang)
         features_folder = os.path.join(output_features_dir, f"{lang}_features")
         os.makedirs(features_folder, exist_ok=True)
@@ -113,14 +114,14 @@ def process_all_images_parallel(image_dir, output_features_dir):
             if not os.path.isdir(digit_image_folder):
                 continue
 
-            label = int(digit_folder)  # Use folder name as label (e.g., '1', '2', etc.)
+            digit = int(digit_folder)  # Use folder name as digit (e.g., '1', '2', etc.)
             for video_folder in os.listdir(digit_image_folder):
                 video_image_folder = os.path.join(digit_image_folder, video_folder)
                 if not os.path.isdir(video_image_folder):
                     continue
 
                 output_csv = os.path.join(features_folder, f"{video_folder}.csv")
-                tasks.append((video_image_folder, output_csv, max_frames, label))
+                tasks.append((video_image_folder, output_csv, max_frames, digit, language_id))
 
     # Use multiprocessing to parallelize
     with Pool(processes=cpu_count()) as pool:
