@@ -7,73 +7,66 @@ from sklearn.preprocessing import StandardScaler
 from evaluate import SignModel
 import time
 import mediapipe as mp
+
+# Initialize MediaPipe hands in static mode for image processing
 mp_hands = mp.solutions.hands
 hands = mp_hands.Hands(static_image_mode=True, max_num_hands=1, min_detection_confidence=0.5)
 
 def process_image(image_path):
-    global hands
-    global mp_hands
-    # Load image
+    # Load the image
     image = cv2.imread(image_path)
     if image is None:
         raise FileNotFoundError(f"Image {image_path} not found")
 
-    # Process image to extract hand landmarks using Mediapipe
-
+    # Convert image to RGB for Mediapipe processing
     image_rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
     results = hands.process(image_rgb)
-    if not results.multi_hand_world_landmarks:
-        print(f"No hand landmarks detected in image {image_path}, recording 63 zeros.")
-        return np.zeros(63)  # Return 63 zeros if no hand landmarks are detected
 
+    if not results.multi_hand_world_landmarks:
+        print(f"No hand landmarks detected in image {image_path}, recording zeros.")
+        return np.zeros(226)  # Return 226 zeros to match model input size
+
+    # Extract hand landmark data
+    hand_data = []
     for hand_landmarks in results.multi_hand_world_landmarks:
-        hand_data = []
         for landmark in hand_landmarks.landmark:
             hand_data.extend([landmark.x, landmark.y, landmark.z])
-        return np.array(hand_data)
 
-    raise ValueError(f"Hand landmarks could not be processed for image {image_path}")
+    # Pad to 226 features if less data is detected
+    if len(hand_data) < 226:
+        hand_data.extend([0] * (226 - len(hand_data)))
+
+    return np.array(hand_data)
 
 def predict_digit(image_path, model_path, scaler_path):
-    print("Process image time")
+    print("Processing image...")
     start = time.time()
-    # Process the image to extract features
-    features = process_image(image_path).reshape(1, -1)
-    end = time.time()
-    print(end - start)
+    features = process_image(image_path).reshape(1, -1)  # Extracted features
+    print("Image processed in", time.time() - start, "seconds.")
 
-    print("Load model time")
+    print("Loading model and scaler...")
     start = time.time()
-    # Load the trained model and scaler
-    model = SignModel()
+    model = SignModel(input_size=226)  # Adjust input size to match training
     model.load_state_dict(torch.load(model_path))
     model.eval()
-    end = time.time()
-    print(end - start)
-
-    print("Load scaler time")
-    start = time.time()
-    scaler = torch.load(scaler_path)
+    scaler = torch.load(scaler_path)  # Load pre-fitted scaler
     features = scaler.transform(features)
-    end = time.time()
-    print(end - start)
+    print("Model and scaler loaded in", time.time() - start, "seconds.")
 
-    print("Predict time")
+    print("Predicting digit...")
     start = time.time()
     features = torch.tensor(features, dtype=torch.float32)
     with torch.no_grad():
         outputs = model(features)
         probabilities = nn.functional.softmax(outputs, dim=1)
         _, predicted = torch.max(probabilities, 1)
-    end = time.time()
-    print(end - start)
-
+    print("Prediction completed in", time.time() - start, "seconds.")
 
     predicted_digit = predicted.item() + 1
     return predicted_digit, probabilities.numpy()
 
 if __name__ == "__main__":
-    image_path = './data/extest/hand_gesture.png'  # Path to the hand gesture image
+    image_path = './data/extest/hand_gesture.jpg'  # Path to the hand gesture image
     model_path = './models/asl_model.pth'
     scaler_path = './models/scaler_asl.pth'
 
